@@ -47,7 +47,7 @@ function GlobalStyle() {
   }
 
   export default function PaginaInicial() {
-    const username = 'peas';
+    const username = 'viniciusbsilva';
   
     return (
       <>
