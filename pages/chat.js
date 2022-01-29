@@ -90,11 +90,12 @@ export default function ChatPage() {
                         padding: '16px',
                     }}
                 >
-
+                    {/* 
+                            Passar as funções como parâmetro!!!
+                    */}
                     <MessageList
                         messages={messageList}
                         deleteMessage={deleteMessage}
-                        setMessageList={setMessageList}
                     />
                     {/* {listaDeMensagens.map((mensagemAtual) => {
                         return (
