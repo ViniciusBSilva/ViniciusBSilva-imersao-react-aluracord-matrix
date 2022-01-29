@@ -129,6 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-#################
-# SUPABASE
-supabase_config.json
+##################
+## SUPABASE
+#supabase_config.json
