@@ -27,13 +27,30 @@ export default function ChatPage() {
             text: newMessage,
         };
 
-        setMessageList([
-            message,
-            ...messageList,
-        ]);
-
+        setMessageList([message, ...messageList]);
         setMessage('');
 
+    }
+
+    function deleteMessage(id) {
+
+        // Lista original
+        console.log("Lista original: ");
+        console.log(messageList);
+
+        // Cria nova lista sem o item
+        // // Filter() é executado para cada item do array. 
+        // // Quando a callback retorna "false" o item não é adicionado ao novo array
+        const newMessageList = messageList.filter((item) => {
+            return item.id != id;
+        });
+
+        // Nova lista sem o item
+        console.log("Nova lista: ");
+        console.log(newMessageList);
+
+        // Atualiza a lista
+        setMessageList(newMessageList);
     }
 
     return (
@@ -74,7 +91,11 @@ export default function ChatPage() {
                     }}
                 >
 
-                    <MessageList messages={messageList} />
+                    <MessageList
+                        messages={messageList}
+                        deleteMessage={deleteMessage}
+                        setMessageList={setMessageList}
+                    />
                     {/* {listaDeMensagens.map((mensagemAtual) => {
                         return (
                             <li key={mensagemAtual.id}>
@@ -206,16 +227,16 @@ function MessageList(props) {
                                 <Button
                                     iconName="FaRegWindowClose"
                                     onClick={() => {
-                                        console.log("Lista original: ");
-                                        console.log(props.messages);
-                                        const newMessageList = props.messages.filter((item) => {
-                                            return item.id != message.id;
-                                        });
-                                        console.log("Nova lista: ");
-                                        console.log(newMessageList);
-                                        // como remover o item da lista?
-                                        console.log("?????????????????????????????????????");
-                                        
+                                        // console.log("Lista original: ");
+                                        // console.log(props.messages);
+                                        // const newMessageList = props.messages.filter((item) => {
+                                        //     return item.id != message.id;
+                                        // });
+                                        // console.log("Nova lista: ");
+                                        // console.log(newMessageList);
+                                        // // como remover o item da lista?
+                                        // console.log("?????????????????????????????????????");
+                                        props.deleteMessage(message.id);
 
                                     }}
                                     colorVariant="neutral"
