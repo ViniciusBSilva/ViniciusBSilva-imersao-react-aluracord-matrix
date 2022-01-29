@@ -233,6 +233,7 @@ function MessageList(props) {
                         >
                             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
                                 <Box styleSheet={{ width: '100%', display: 'flex' }}>
+                                <a href={`https://github.com/${message.from}`} target="_blank" rel="noreferrer noopener">
                                     <Image
                                         styleSheet={{
                                             width: '50px',
@@ -243,6 +244,7 @@ function MessageList(props) {
                                         }}
                                         src={message.image}
                                     />
+                                    </a>
                                     <Text tag="strong"
                                         styleSheet={{
                                             fontSize: '14px',
