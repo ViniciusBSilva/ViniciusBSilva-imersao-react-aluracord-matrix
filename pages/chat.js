@@ -1,33 +1,55 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import supabaseConfig from '../supabase_config.json';
+
+// Como fazer AJAX: https://medium.com/@omariosouto/entendendo-como-fazer-ajax-com-a-fetchapi-977ff20da3c6
+const supabaseClient = createClient(supabaseConfig.URL, supabaseConfig.ANON_KEY);
+
 
 export default function ChatPage() {
 
     const [message, setMessage] = React.useState('');
     const [messageList, setMessageList] = React.useState([]);
 
-    /*
-    // Usuário
-    - Usuário digita no campo textarea
-    - Aperta enter para enviar
-    - Tem que adicionar o texto na listagem
-    
-    // Dev
-    - [X] Campo criado
-    - [X] Vamos usar o onChange usa o useState (ter if pra caso seja enter pra limpar a variavel)
-    - [X] Lista de mensagens 
-    */
+
+    React.useEffect(() => {
+
+        supabaseClient
+            .from('message_list')
+            .select('*')
+            // .then((resp) => {
+            //     console.log('Dados da consulta: ', resp);
+            //     setMessageList(resp.data);
+            .order('created_at', { ascending: false })
+            .then(({ data }) => {
+                console.log('SELECT - Dados da consulta: ', data);
+                setMessageList(data);
+            });
+
+    }, []);
+
 
     function submitNewMessage(newMessage) {
 
         const message = {
-            id: messageList.length + 1,
-            from: 'viniciusbsilva',
+            // id: messageList.length + 1,
+            // created_at: new Date(),
+            from: 'ViniciusBSilva',
             text: newMessage,
+            image: 'https://github.com/ViniciusBSilva.png',
         };
 
-        setMessageList([message, ...messageList]);
+        supabaseClient
+            .from('message_list')
+            .insert([message,])          // tem que ser um objeto com os MESMOS campos
+            .then(({ data }) => {
+                console.log('INSERT - Dados da resposta: ', data);
+                setMessageList([data[0], ...messageList]);
+            });
+
+        // setMessageList([message, ...messageList]);
         setMessage('');
 
     }
@@ -52,6 +74,7 @@ export default function ChatPage() {
         // Atualiza a lista
         setMessageList(newMessageList);
     }
+
 
     return (
         <Box
@@ -93,17 +116,12 @@ export default function ChatPage() {
                     {/* 
                             Passar as funções como parâmetro!!!
                     */}
+
                     <MessageList
                         messages={messageList}
                         deleteMessage={deleteMessage}
                     />
-                    {/* {listaDeMensagens.map((mensagemAtual) => {
-                        return (
-                            <li key={mensagemAtual.id}>
-                                {mensagemAtual.de}: {mensagemAtual.texto}
-                            </li>
-                        )
-                    })} */}
+
                     <Box
                         as="form"
                         onSubmit={(event) => {
@@ -178,9 +196,7 @@ function Header() {
 
 function MessageList(props) {
 
-    function removeMessage() {
-        console.log(messageList);
-    }
+    // console.log(props);
 
     return (
         <Box
@@ -194,6 +210,7 @@ function MessageList(props) {
                 marginBottom: '16px',
             }}
         >
+
             {props.messages.map((message) => {
                 return (
 
@@ -215,48 +232,45 @@ function MessageList(props) {
                             }}
                         >
                             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                                <Image
-                                    styleSheet={{
-                                        width: '50px',
-                                        height: '50px',
-                                        borderRadius: '50%',
-                                        display: 'inline-block',
-                                        marginRight: '8px',
-                                    }}
-                                    src={`https://github.com/${message.from}.png`}
-                                />
+                                <Box styleSheet={{ width: '100%', display: 'flex' }}>
+                                    <Image
+                                        styleSheet={{
+                                            width: '50px',
+                                            height: '50px',
+                                            borderRadius: '50%',
+                                            display: 'inline-block',
+                                            marginRight: '8px',
+                                        }}
+                                        src={message.image}
+                                    />
+                                    <Text tag="strong"
+                                        styleSheet={{
+                                            fontSize: '14px',
+                                            marginLeft: '8px',
+                                        }}
+                                    >
+                                        {message.from}
+                                    </Text>
+                                    <Text
+                                        styleSheet={{
+                                            fontSize: '14px',
+                                            marginLeft: '8px',
+                                            color: appConfig.theme.colors.neutrals[300],
+                                        }}
+                                        tag="span"
+                                    >
+                                        {(new Date(message.created_at).toLocaleDateString())}
+                                    </Text>
+                                </Box>
                                 <Button
                                     iconName="FaRegWindowClose"
                                     onClick={() => {
-                                        // console.log("Lista original: ");
-                                        // console.log(props.messages);
-                                        // const newMessageList = props.messages.filter((item) => {
-                                        //     return item.id != message.id;
-                                        // });
-                                        // console.log("Nova lista: ");
-                                        // console.log(newMessageList);
-                                        // // como remover o item da lista?
-                                        // console.log("?????????????????????????????????????");
                                         props.deleteMessage(message.id);
-
                                     }}
                                     colorVariant="neutral"
                                     variant="tertiary"
                                 />
                             </Box>
-                            <Text tag="strong">
-                                {message.from}
-                            </Text>
-                            <Text
-                                styleSheet={{
-                                    fontSize: '10px',
-                                    marginLeft: '8px',
-                                    color: appConfig.theme.colors.neutrals[300],
-                                }}
-                                tag="span"
-                            >
-                                {(new Date().toLocaleDateString())}
-                            </Text>
                         </Box>
                         {message.text}
                     </Text>
@@ -267,15 +281,3 @@ function MessageList(props) {
         </Box>
     )
 }
-
-
-
-// export default function PaginaChat() {
-
-//     return (
-//         <>
-//             <div><h1>Página do Chat</h1></div>
-//         </>
-//     );
-
-// }
