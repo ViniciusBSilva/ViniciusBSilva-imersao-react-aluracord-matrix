@@ -1,14 +1,28 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { useRouter } from 'next/router';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
+
 import supabaseConfig from '../supabase_config.json';
 
 // Como fazer AJAX: https://medium.com/@omariosouto/entendendo-como-fazer-ajax-com-a-fetchapi-977ff20da3c6
 const supabaseClient = createClient(supabaseConfig.URL, supabaseConfig.ANON_KEY);
 
+function setMessageListener(addMessage) {
+    return supabaseClient
+        .from('message_list')
+        .on('INSERT', (resp) => {
+            addMessage(resp.new);
+        })
+        .subscribe();
+}
 
 export default function ChatPage() {
+
+    const routing = useRouter();
+    const loggedUser = routing.query.username;
 
     const [message, setMessage] = React.useState('');
     const [messageList, setMessageList] = React.useState([]);
@@ -24,32 +38,42 @@ export default function ChatPage() {
             //     setMessageList(resp.data);
             .order('created_at', { ascending: false })
             .then(({ data }) => {
-                console.log('SELECT - Dados da consulta: ', data);
                 setMessageList(data);
             });
 
     }, []);
 
 
+    const subscription = setMessageListener((newMessage) => {
+
+        // Quero reusar um valor de referencia (objeto/array) 
+        // Passar uma função pro setState
+
+        // setListaDeMensagens([
+        //     novaMensagem,
+        //     ...listaDeMensagens
+        // ])
+
+        setMessageList((currentList) => {
+            return [newMessage, ...currentList]
+        });
+
+    });
+
     function submitNewMessage(newMessage) {
 
         const message = {
-            // id: messageList.length + 1,
-            // created_at: new Date(),
-            from: 'ViniciusBSilva',
+            from: loggedUser,
             text: newMessage,
-            image: 'https://github.com/ViniciusBSilva.png',
         };
 
         supabaseClient
             .from('message_list')
-            .insert([message,])          // tem que ser um objeto com os MESMOS campos
+            .insert([message])          // tem que ser um objeto com os MESMOS campos
             .then(({ data }) => {
-                console.log('INSERT - Dados da resposta: ', data);
-                setMessageList([data[0], ...messageList]);
+                // setMessageList([data[0], ...messageList]);
             });
 
-        // setMessageList([message, ...messageList]);
         setMessage('');
 
     }
@@ -121,7 +145,14 @@ export default function ChatPage() {
                         messages={messageList}
                         deleteMessage={deleteMessage}
                     />
-
+                    <Box>
+                        {/* CallBack */}
+                        <ButtonSendSticker
+                            onStickerClick={(sticker => {
+                                submitNewMessage(':sticker:' + sticker);
+                            })}
+                        />
+                    </Box>
                     <Box
                         as="form"
                         onSubmit={(event) => {
@@ -196,8 +227,6 @@ function Header() {
 
 function MessageList(props) {
 
-    // console.log(props);
-
     return (
         <Box
             tag="ul"
@@ -233,17 +262,17 @@ function MessageList(props) {
                         >
                             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
                                 <Box styleSheet={{ width: '100%', display: 'flex' }}>
-                                <a href={`https://github.com/${message.from}`} target="_blank" rel="noreferrer noopener">
-                                    <Image
-                                        styleSheet={{
-                                            width: '50px',
-                                            height: '50px',
-                                            borderRadius: '50%',
-                                            display: 'inline-block',
-                                            marginRight: '8px',
-                                        }}
-                                        src={message.image}
-                                    />
+                                    <a href={`https://github.com/${message.from}`} target="_blank" rel="noreferrer noopener">
+                                        <Image
+                                            styleSheet={{
+                                                width: '50px',
+                                                height: '50px',
+                                                borderRadius: '50%',
+                                                display: 'inline-block',
+                                                marginRight: '8px',
+                                            }}
+                                            src={`https://github.com/${message.from}.png`}
+                                        />
                                     </a>
                                     <Text tag="strong"
                                         styleSheet={{
@@ -274,7 +303,20 @@ function MessageList(props) {
                                 />
                             </Box>
                         </Box>
-                        {message.text}
+                        {/* [Declarativo] */}
+                        {/* Condicional: {message.text.startsWith(':sticker:').toString()} */}
+                        {message.text.startsWith(':sticker:')
+                            ? (
+                                <Image
+                                    src={message.text.replace(':sticker:', '')}
+                                    styleSheet={{
+                                        maxWidth: '200px',
+                                    }}
+                                />
+                            )
+                            : (
+                                message.text
+                            )}
                     </Text>
 
                 );
